@@ -1,4 +1,5 @@
 from django.utils import timezone
+from django.utils.text import slugify
 from rest_framework import generics, permissions, filters
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -9,13 +10,17 @@ from .serializers import ProductSerializer
 
 class ProductListCreateView(generics.ListCreateAPIView):
     serializer_class = ProductSerializer
+    pagination_class = None
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['title', 'short_description', 'description']
     ordering_fields = ['created_at', 'price_amount', 'published_at']
 
     def get_queryset(self):
         qs = Product.objects.select_related('creator').all()
-        if self.request.user.is_authenticated and self.request.user.role == 'creator':
+        mine = self.request.query_params.get('mine') == '1'
+        if self.request.user.is_authenticated and self.request.user.role == 'creator' and mine:
+            return qs.filter(creator__user=self.request.user)
+        if self.request.user.is_authenticated and self.request.user.role == 'creator' and self.request.method != 'GET':
             return qs.filter(creator__user=self.request.user)
         return qs.filter(status='published')
 
@@ -29,7 +34,14 @@ class ProductListCreateView(generics.ListCreateAPIView):
             user=self.request.user,
             defaults={'display_name': self.request.user.username or self.request.user.email.split('@')[0], 'slug': str(self.request.user.id)[:8]}
         )
-        serializer.save(creator=profile)
+        title = serializer.validated_data['title']
+        incoming_slug = serializer.validated_data.get('slug') or slugify(title)
+        slug = incoming_slug
+        counter = 1
+        while Product.objects.filter(slug=slug).exists():
+            counter += 1
+            slug = f"{incoming_slug}-{counter}"
+        serializer.save(creator=profile, slug=slug)
 
 class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Product.objects.select_related('creator')
@@ -53,4 +65,12 @@ def publish_product(request, pk):
     product.status = 'published'
     product.published_at = timezone.now()
     product.save(update_fields=['status', 'published_at', 'updated_at'])
+    return Response(ProductSerializer(product).data)
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated, IsCreator])
+def archive_product(request, pk):
+    product = Product.objects.get(pk=pk, creator__user=request.user)
+    product.status = 'archived'
+    product.save(update_fields=['status', 'updated_at'])
     return Response(ProductSerializer(product).data)

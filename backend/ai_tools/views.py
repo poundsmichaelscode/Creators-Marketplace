@@ -23,6 +23,7 @@ class GenerateView(views.APIView):
 
 class HistoryView(generics.ListAPIView):
     serializer_class = AIGenerationSerializer
+    pagination_class = None
     permission_classes = [permissions.IsAuthenticated]
     def get_queryset(self):
         return AIGeneration.objects.filter(creator__user=self.request.user).order_by('-created_at')

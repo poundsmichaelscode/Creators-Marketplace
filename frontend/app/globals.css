@@ -6,9 +6,15 @@ html, body {
   @apply bg-slate-950 text-slate-100;
 }
 
+body { @apply min-h-screen; }
 .container-page { @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8; }
-.card { @apply rounded-2xl border border-slate-800 bg-slate-900/70 shadow-sm; }
-.btn { @apply inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium transition; }
+.card { @apply rounded-3xl border border-slate-800 bg-slate-900/70 shadow-sm backdrop-blur; }
+.btn { @apply inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-60; }
 .btn-primary { @apply btn bg-brand text-white hover:bg-brand-dark; }
 .btn-secondary { @apply btn bg-slate-800 text-slate-100 hover:bg-slate-700; }
+.btn-ghost { @apply btn border border-slate-700 bg-transparent text-slate-100 hover:bg-slate-900; }
 .input { @apply w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 outline-none focus:ring-2 focus:ring-brand; }
+.label { @apply mb-2 block text-sm font-medium text-slate-300; }
+.helper { @apply text-sm text-slate-400; }
+.badge { @apply inline-flex rounded-full border border-slate-700 px-3 py-1 text-xs font-medium text-slate-300; }
+.grid-cards { @apply grid gap-4 md:grid-cols-2 xl:grid-cols-3; }

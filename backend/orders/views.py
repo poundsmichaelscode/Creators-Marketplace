@@ -4,6 +4,7 @@ from .serializers import OrderSerializer
 
 class OrderListView(generics.ListAPIView):
     serializer_class = OrderSerializer
+    pagination_class = None
     permission_classes = [permissions.IsAuthenticated]
     def get_queryset(self):
         return Order.objects.filter(buyer=self.request.user).prefetch_related('items__product')
